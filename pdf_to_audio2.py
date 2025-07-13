@@ -32,6 +32,24 @@ def speak_text():
     engine.say(text)
     engine.runAndWait()
 
+def save_mp3():
+    text = text_box.get("1.0", tk.END).strip()
+    if not text:
+        print("No text to convert.")
+        return
+
+    save_path = filedialog.asksaveasfilename(
+        defaultextension=".mp3",
+        filetypes=[("MP3 files", "*.mp3")],
+        title="Save Audiobook As"
+    )
+    if save_path:
+        engine.setProperty('rate', rate_slider.get())
+        engine.setProperty('volume', volume_slider.get())
+        engine.save_to_file(text, save_path)
+        engine.runAndWait()
+        print(f"Audio saved to: {save_path}")
+
 # Tkinter GUI setup
 root = tk.Tk()
 root.title("PDF to Audiobook Converter")
@@ -59,5 +77,8 @@ volume_slider.pack()
 # Speak Button
 speak_btn = tk.Button(root, text="Play Audiobook", command=speak_text)
 speak_btn.pack(pady=10)
+# Save Butten
+save_btn = tk.Button(root, text="Save as MP3", command=save_mp3)
+save_btn.pack(pady=5)
 
 root.mainloop()
