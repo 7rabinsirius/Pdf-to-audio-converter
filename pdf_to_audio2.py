@@ -1,13 +1,17 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 import pyttsx3
 import fitz  # PyMuPDF
+import os
 
 # Initialize pyttsx3 engine
 engine = pyttsx3.init()
 
+default_name = None
 # Function to select PDF and extract text
 def select_pdf():
+    global default_name
     file_path = filedialog.askopenfilename(
         title="Select PDF File",
         filetypes=[("PDF Files", "*.pdf")]
@@ -16,6 +20,8 @@ def select_pdf():
         text = extract_text(file_path)
         text_box.delete("1.0", tk.END)
         text_box.insert(tk.END, text)
+        #suggest file name
+        default_name = os.path.basename(file_path).replace('.pdf', '.mp3')
 
 def extract_text(file_path):
     doc = fitz.open(file_path)
@@ -39,6 +45,7 @@ def save_mp3():
         return
 
     save_path = filedialog.asksaveasfilename(
+        initialfile=default_name,
         defaultextension=".mp3",
         filetypes=[("MP3 files", "*.mp3")],
         title="Save Audiobook As"
@@ -49,6 +56,20 @@ def save_mp3():
         engine.save_to_file(text, save_path)
         engine.runAndWait()
         print(f"Audio saved to: {save_path}")
+
+        #Comform save message
+        messagebox.showinfo("Success", f"Audio saved to:\n{save_path}")
+        
+
+def list_voices():
+    voices = engine.getProperty('voices')
+    return [(v.id, v.name) for v in voices]
+
+def set_voice(event):
+    selected_index = voice_menu.curselection()[0]
+    voice_id = voice_options[selected_index][0]
+    engine.setProperty('voice', voice_id)
+
 
 # Tkinter GUI setup
 root = tk.Tk()
@@ -61,6 +82,15 @@ pdf_btn.pack(pady=5)
 # Text Box
 text_box = tk.Text(root, height=15, width=60)
 text_box.pack(padx=10, pady=5)
+
+# Voice selection
+voice_options = list_voices()
+voice_menu = tk.Listbox(root, height=5, exportselection=False)
+for _, name in voice_options:
+    voice_menu.insert(tk.END, name)
+voice_menu.pack(pady=5)
+voice_menu.bind('<<ListboxSelect>>', set_voice)
+
 
 # Speed Slider
 tk.Label(root, text="Speed (Rate)").pack()
